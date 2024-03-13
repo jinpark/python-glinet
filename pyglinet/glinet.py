@@ -51,6 +51,7 @@ class GlInet:
                  verify_ssl_certificate: bool = False,
                  update_api_reference_cache: bool = False,
                  api_reference_url: str = "https://dev.gl-inet.cn/docs/api_docs_api/",
+                 skip_api_reference: bool = False,
                  cache_folder: str = None):
         """
         :param url: url to router rpc api
@@ -95,7 +96,7 @@ class GlInet:
         self._login_cache_path = os.path.join(self._cache_folder, "login.pkl")
         self._api_reference_cache_path = os.path.join(self._cache_folder, "api_reference.pkl")
         self._api_reference_url = api_reference_url
-        self._api_description = self.__load_api_description(update_api_reference_cache)
+        self._api_description = self.__load_api_description(update_api_reference_cache, skip_api_reference)
         self._api = None
         self._keep_alive_interrupt_event = threading.Event()
 
@@ -447,7 +448,7 @@ class GlInet:
         """
         return hashlib.md5(f'{self._username}:{self._cached_login_data["hash"]}:{challenge.nonce}'.encode()).hexdigest()
 
-    def __load_api_description(self, update: bool = False):
+    def __load_api_description(self, update: bool = False, skip: bool = False):
         """
         Load api description in json format
 
@@ -457,6 +458,9 @@ class GlInet:
         :return: api description
         """
         api_description = None
+        if skip:
+            log.info("skipped loading api description")
+            return api_description
         if update or not os.path.exists(self._api_reference_cache_path):
             log.info(f"Loading api description from {self._api_reference_url}")
             resp = requests.get(self._api_reference_url)
